@@ -196,6 +196,47 @@ app.delete('/api/enquiries', async (req, res) => {
   }
 });
 
+// ─── Services ─────────────────────────────────────────────────────────────────────
+app.get('/api/services', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM services ORDER BY sort_order ASC');
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
+app.post('/api/services', async (req, res) => {
+  try {
+    const { title, desc, info, image_url, sort_order } = req.body;
+    if (!title) return res.status(400).json({ error: 'title is required' });
+    const [result] = await pool.query(
+      'INSERT INTO services (title, `desc`, info, image_url, sort_order) VALUES (?, ?, ?, ?, ?)',
+      [title, desc || '', info || '', image_url || null, sort_order || 0]
+    );
+    res.json({ success: true, id: result.insertId });
+  } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
+app.put('/api/services', async (req, res) => {
+  try {
+    const { id, title, desc, info, image_url, sort_order } = req.body;
+    if (!id) return res.status(400).json({ error: 'id is required' });
+    await pool.query(
+      'UPDATE services SET title=?, `desc`=?, info=?, image_url=?, sort_order=? WHERE id=?',
+      [title, desc || '', info || '', image_url || null, sort_order || 0, id]
+    );
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
+app.delete('/api/services', async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ error: 'id is required' });
+    await pool.query('DELETE FROM services WHERE id=?', [id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
 // ─── Blog ─────────────────────────────────────────────────────────────────────
 app.get('/api/blogs', async (req, res) => {
   try {

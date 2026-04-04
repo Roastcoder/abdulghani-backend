@@ -11,6 +11,33 @@ async function migrate() {
   });
 
   await conn.query(`
+    CREATE TABLE IF NOT EXISTS services (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      \`desc\` TEXT DEFAULT '',
+      info TEXT DEFAULT '',
+      image_url VARCHAR(500),
+      sort_order INT DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Default services
+  const defaultServices = [
+    ['Equipment Installation', 'Professional installation and setup of all our agricultural equipment with on-site guidance for your farm.', 'Expert installation services for all agricultural equipment. Our skilled technicians ensure your machinery operates at peak performance.', 1],
+    ['Maintenance & Repair', 'Regular maintenance services and quick repairs to keep your equipment running at peak performance.', 'Professional customization services to adapt equipment to your specific farming needs. We modify and upgrade machinery for optimal results.', 2],
+    ['Delivery & Logistics', 'Reliable pan-India delivery with careful handling to ensure your equipment arrives in perfect condition.', 'Fast and reliable delivery services across all regions. We ensure your equipment reaches you safely and on time, ready for immediate use.', 3],
+    ['After-Sales Support', 'Dedicated customer support and spare parts availability to minimize downtime during critical farming seasons.', '24/7 customer support and technical assistance. Our dedicated team is always ready to help you with any questions or concerns.', 4],
+  ];
+
+  for (const [title, desc, info, sort_order] of defaultServices) {
+    const [existing] = await conn.query('SELECT id FROM services WHERE title = ?', [title]);
+    if (!existing.length) {
+      await conn.query('INSERT INTO services (title, `desc`, info, sort_order) VALUES (?, ?, ?, ?)', [title, desc, info, sort_order]);
+    }
+  }
+
+  await conn.query(`
     CREATE TABLE IF NOT EXISTS blogs (
       id INT AUTO_INCREMENT PRIMARY KEY,
       title VARCHAR(500) NOT NULL,
