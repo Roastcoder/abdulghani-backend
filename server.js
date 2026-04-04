@@ -196,6 +196,47 @@ app.delete('/api/enquiries', async (req, res) => {
   }
 });
 
+// ─── Blog ─────────────────────────────────────────────────────────────────────
+app.get('/api/blogs', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM blogs ORDER BY sort_order ASC, created_at DESC');
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
+app.post('/api/blogs', async (req, res) => {
+  try {
+    const { title, excerpt, content, image_url, author, date, sort_order } = req.body;
+    if (!title || !excerpt) return res.status(400).json({ error: 'title and excerpt are required' });
+    const [result] = await pool.query(
+      'INSERT INTO blogs (title, excerpt, content, image_url, author, date, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [title, excerpt, content || '', image_url || null, author || 'Admin', date || new Date().toISOString().split('T')[0], sort_order || 0]
+    );
+    res.json({ success: true, id: result.insertId });
+  } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
+app.put('/api/blogs', async (req, res) => {
+  try {
+    const { id, title, excerpt, content, image_url, author, date, sort_order } = req.body;
+    if (!id) return res.status(400).json({ error: 'id is required' });
+    await pool.query(
+      'UPDATE blogs SET title=?, excerpt=?, content=?, image_url=?, author=?, date=?, sort_order=? WHERE id=?',
+      [title, excerpt, content || '', image_url || null, author || 'Admin', date, sort_order || 0, id]
+    );
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
+app.delete('/api/blogs', async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ error: 'id is required' });
+    await pool.query('DELETE FROM blogs WHERE id=?', [id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Server error' }); }
+});
+
 // ─── FAQ ─────────────────────────────────────────────────────────────────────
 app.get('/api/faqs', async (req, res) => {
   try {

@@ -11,6 +11,20 @@ async function migrate() {
   });
 
   await conn.query(`
+    CREATE TABLE IF NOT EXISTS blogs (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      title VARCHAR(500) NOT NULL,
+      excerpt TEXT NOT NULL,
+      content LONGTEXT DEFAULT '',
+      image_url VARCHAR(500),
+      author VARCHAR(100) DEFAULT 'Admin',
+      date VARCHAR(50),
+      sort_order INT DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await conn.query(`
     CREATE TABLE IF NOT EXISTS faqs (
       id INT AUTO_INCREMENT PRIMARY KEY,
       question VARCHAR(500) NOT NULL,
@@ -70,6 +84,21 @@ async function migrate() {
       'INSERT IGNORE INTO site_content (key_name, value) VALUES (?, ?)',
       [key, value]
     );
+  }
+
+  // Default FAQs
+  const defaultBlogs = [
+    ['Choosing the Right Plough for Your Soil Type', 'Understanding your soil type is the first step to selecting the perfect plough. Learn how to match disc ploughs, MB ploughs, and cultivators to your specific soil conditions.', 'January 15, 2026', 1],
+    ['5 Tips for Maintaining Your Agricultural Equipment', 'Proper maintenance extends the life of your farming equipment and ensures optimal performance. Follow these essential tips for disc ploughs and cultivators.', 'January 10, 2026', 2],
+    ['Benefits of Automatic Disc Ploughs in Modern Farming', 'Automatic disc ploughs revolutionize tillage by reducing operator fatigue and ensuring consistent depth. Discover why more farmers are making the switch.', 'January 5, 2026', 3],
+    ['Land Levelling: Why It Matters for Crop Yield', 'Proper land levelling improves water distribution, reduces waterlogging, and significantly boosts crop yield. Learn how levellers can transform your fields.', 'December 28, 2025', 4],
+  ];
+
+  for (const [title, excerpt, date, sort_order] of defaultBlogs) {
+    const [existing] = await conn.query('SELECT id FROM blogs WHERE title = ?', [title]);
+    if (!existing.length) {
+      await conn.query('INSERT INTO blogs (title, excerpt, date, sort_order) VALUES (?, ?, ?, ?)', [title, excerpt, date, sort_order]);
+    }
   }
 
   // Default FAQs
