@@ -15,7 +15,8 @@ app.use(cors({
     'https://lightsalmon-scorpion-346869.hostingersite.com',
     'https://seashell-partridge-597593.hostingersite.com',
     'http://localhost:5173',
-    'http://localhost:8080'
+    'http://localhost:8080',
+    'http://localhost:8081'
   ],
   credentials: true
 }));
